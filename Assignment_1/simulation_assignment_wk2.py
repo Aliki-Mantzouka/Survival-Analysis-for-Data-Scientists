@@ -22,6 +22,8 @@ for p_censor in censoring_levels:
     lambdas_MLE = np.zeros(r)
     lambdas_naive = np.zeros(r)
 
+    zero_event_count = 0
+
     for i in range(r): # for each of the sensoring levels
 
         # true survival times
@@ -42,22 +44,31 @@ for p_censor in censoring_levels:
             delta = (true_times <= censored_times).astype(int)
 
         # calculate MLE and naive estimates of lambda
-        lambdas_MLE[i] = delta.sum() / observed_times.sum()
+        if delta.sum() == 0:
+            zero_event_count += 1
+            lambdas_MLE[i] = np.nan
+        else:
+            lambdas_MLE[i] = delta.sum() / observed_times.sum()
+
         lambdas_naive[i] = 1 / observed_times.mean()
 
+    zero_event_proportion = zero_event_count / r
 
-    # calculate bias, variance and MSE for both estimators
-    bias_MLE = np.mean(lambdas_MLE) - lambda_
+    # calculate bias, variance and MSE for both estimators. we use nan-aware functions for MLE to handle zero-event cases.
+    bias_MLE = np.nanmean(lambdas_MLE) - lambda_
     bias_naive = np.mean(lambdas_naive) - lambda_
 
-    var_MLE = np.var(lambdas_MLE, ddof=1)
+    var_MLE = np.nanvar(lambdas_MLE, ddof=1)
     var_naive = np.var(lambdas_naive, ddof=1)
 
-    mse_MLE = np.mean((lambdas_MLE - lambda_) ** 2)
+    mse_MLE = np.nanmean((lambdas_MLE - lambda_) ** 2)
     mse_naive = np.mean((lambdas_naive - lambda_) ** 2)
+
+    print(f'Number of zero-event simulations for censoring level {p_censor}: {zero_event_count}')
 
     results.append({
         "censoring": p_censor,
+        "zero_event_proportion": zero_event_proportion,
         "bias_MLE": bias_MLE,
         "bias_naive": bias_naive,
         "var_MLE": var_MLE,
@@ -68,11 +79,12 @@ for p_censor in censoring_levels:
         "lambdas_naive": lambdas_naive,
     })
 
-header = f"{'Censor%':>8} | {'Bias MLE':>11} | {'Bias Naive':>11} | {'Var MLE':>11} | {'Var Naive':>11} | {'MSE MLE':>11} | {'MSE Naive':>11}"
+header = f"{'Censor%':>8} | {'Zero Event%':>11} | {'Bias MLE':>11} | {'Bias Naive':>11} | {'Var MLE':>11} | {'Var Naive':>11} | {'MSE MLE':>11} | {'MSE Naive':>11}"
 print(header)
 print("-" * len(header))
 for res in results:
     print(f"{res['censoring']*100:7.0f}% | "
+          f"{res['zero_event_proportion']*100:11.6f} | "
           f"{res['bias_MLE']:11.6f} | {res['bias_naive']:11.6f} | "
           f"{res['var_MLE']:11.6f} | {res['var_naive']:11.6f} | "
           f"{res['mse_MLE']:11.6f} | {res['mse_naive']:11.6f}")
@@ -130,4 +142,4 @@ plt.close()
 
 
 print("\nPlots saved: bias_vs_censoring.png, variance_vs_censoring.png, "
-      "mse_vs_censoring.png, lambda_distributions.png")
+      "mse_vs_censoring.png")
