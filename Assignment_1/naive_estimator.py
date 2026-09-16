@@ -4,10 +4,6 @@ import pandas as pd
 np.random.seed(6767)
 
 def run_naive_simulation(n=500, lambda_true=0.05, r_reps=2000, censoring_proportions=[0.0, 0.1, 0.5]):
-    """
-    Simulates survival data and evaluates the performance of the Naive Estimator 
-    across different target censoring proportions.
-    """
     results = []
 
     for p_censor in censoring_proportions:
@@ -29,7 +25,7 @@ def run_naive_simulation(n=500, lambda_true=0.05, r_reps=2000, censoring_proport
                 # observed time is the minimum: Y = min(T, C)
                 observed_times = np.minimum(true_times, censoring_times)
 
-            # 3. naive estimator: lambda_hat_naive = 1 / mean(Y)
+            # naive estimator: lambda_hat_naive = 1 / mean(Y)
             lambdas_naive[i] = 1.0 / np.mean(observed_times)
 
         # calculate Monte Carlo metrics
@@ -52,5 +48,5 @@ if __name__ == "__main__":
     print("Running Naive Estimator Simulation...\n")
     df_results = run_naive_simulation()
     
-    # Display results
+    # display results
     print(df_results.to_string(index=False))
