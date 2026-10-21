@@ -1,2 +1,5 @@
 .venv/
 __pycache__
+results_censored/mean_lifetime_summary.csv
+results_censored/run_metadata.json
+results_censored/report_table_*.csv

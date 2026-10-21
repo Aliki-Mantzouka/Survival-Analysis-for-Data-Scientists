@@ -1,0 +1,33 @@
+- Original data-generating model, parameter values and four competing methods preserved.
+- Still omits dirty air, however the hypothesis on the report mentioned the effects of omitting temperature -> that has to me changed on this assignment's report.
+- In the report we need to make the distinction between betas, gamma and mean lifetime explicit.
+	- The code already distinguishes different parameters with different variable names
+	- The teacher said on the feedback that the performance measure notation used theta, while the code mentioned betas and gammas
+- **Teacher’s concern 1 addressed in the code:** Hypotheses 1, 2 and 4 discussed mean tire lifetime, but the simulation only evaluated regression coefficients and Weibull shape.
+	- Added to the code the teacher’s suggested route of **adding mean-lifetime performance**
+	- The new `profiles()` function defines six tire profiles:
+		- Temperatures of 25, 35 and 45 degrees.
+		- Intermediate and hard tires at each temperature.
+		- Dirty-air exposure fixed at 0.5.
+	- True mean: For each possible profile, we calculate the true arithmetic mean lifetime
+	- Each model predicts this mean in every repetition and the script then calculates its bias, empirical variance and MSE
+	- **Why fixed profiles?**: Mean lifetime depends on temperature, compound and dirty air. Saying “the mean tire lifetime” without specifying these conditions leaves the target ambiguous. Fixed profiles also ensure that the true mean stays the same when the simulated sample’s covariates change due to different generated data.
+	- Estimates of the mean: For survival models, the prediction uses the fitted coefficients, intercept and shape. For OLS, I added an empirical **smearing correction**, because simply exponentiating a predicted log lifetime generally does not produce the arithmetic mean, and the smearing factor ensures that transformation.
+- **Teacher’s concern 2 addressed in the code 2:** Check whether the estimated variance of regression-coefficient estimators is accurate when censored observations are treated as failures.
+	- "When treating censored observations as failures" means checking if the estimated variance of the estimators is accurate when we use the OLS estimator.
+	- The original code calculated just the empirical variance, that is, how much a coefficient estimate varies across the 2,000 repetitions. It did not save the variance that each fitted model reported.
+	- Added the calculation of the variance of each fitted model and in the end calculate the variance ratio between the average of the estimated variances and the empirical variance.
+		- if near 1 -> estimated variance is accurate
+		- way bellow 1 -> underestimated uncertainty
+	- For OLS: the script now saves classical OLS covariance estimates
+	- For survival models: added covariance estimates from the analytic observed-information matrix and because shape is optimized as the log of gamma, its variance is transformed back using the delta method.
+- **Teacher’s concern 3 addressed in the code:** Make the question more distinct from the first assignment, for example by focusing on misspecification.
+	- New revised question: **how these modeling mistakes affect coefficients, lifetime predictions and uncertainty**, with censoring determining how strongly those effects appear.
+	- added `paired_comparisons()`, which compares each misspecification model alternative’s squared error with the correct model’s squared error on the same simulated datasets. 
+	- In the report: Discuss each evaluated quantity separately. An unexpected MSE ranking is a result to explain through bias and variance.
+- **Teacher’s concern 4 addressed in the code:** Is generating new covariates for every repetition necessary, and why?
+	- Updated script contains two designs:
+		- random: what was already being done on Part II. Covariates and failure times change between repetitions. -> This remains our primary analysis
+		- fixed: We fix the covariate matrix and only failure times change through repetitions -> This provides sensitivity analysis
+	- The answer for teacher's question must be specifically answered in the report:
+		- **resampling is not necessary in every simulation.** Random design includes variation in the sampled covariates, and the fixed design conditions on them.
